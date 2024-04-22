@@ -13,21 +13,32 @@ def home():
     
 
 def token_required(f):
+    """a decorator to be used only after app.route which checks for token in header
+    """
+
+    
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.args.get('token')
+
+        token = request.headers.get('Authorization')
+        
+        if not token:
+            token=request.args.get('token')
 
         if not token:
             return jsonify({'message': 'token is missing!'}), 403
         try:
+            token = (token.split(" ")[-1])
             jwt.decode(token, app.config['SECRET_KEY'],algorithms=["HS256"])
         except:
             return jsonify({'message': 'token is invalid!'}), 403
+
         return f(*args, **kwargs)
+    
     return decorated
 
 
-@app.route('/unprotected')
+@app.route('/unprotected/')
 def unprotected():
     return jsonify({'message':'Anyone can view this'})
 
@@ -41,7 +52,7 @@ def login():
     if request.form['username'] and request.form['password']=='123456':
         token = jwt.encode({
             'user':request.form['username'],
-            'exp': datetime.datetime.utcnow()+ datetime.timedelta(seconds=15)
+            'exp': datetime.datetime.utcnow()+ datetime.timedelta(minutes=10)
         },
         app.config['SECRET_KEY'],algorithm="HS256")
         return jsonify({'token':token})
