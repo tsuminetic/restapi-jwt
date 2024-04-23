@@ -13,10 +13,8 @@ def home():
     
 
 def token_required(f):
-    """a decorator to be used only after app.route which checks for token in header
+    """a decorator to be used only after app.route which checks for token in header as AUthentication
     """
-
-    
     @wraps(f)
     def decorated(*args, **kwargs):
 
@@ -46,6 +44,8 @@ def unprotected():
 @token_required
 def protected():
     return jsonify({'message':'only people with valid tokens can view this'})
+
+
 
 @app.route('/login', methods=['POST'])
 def login():
