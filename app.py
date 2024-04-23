@@ -2,62 +2,29 @@ from flask import Flask, request, make_response, jsonify,render_template
 import jwt
 import datetime
 from functools import wraps
+from flask_sqlalchemy import SQLAlchemy
 # jwt.decode(token, app.config['SECRET_KEY'],algorithms=["HS256"])
 
-app=Flask(__name__)
-app.config['SECRET_KEY']='dasjhghjasbdas'
+db = SQLAlchemy()
 
-@app.route('/')
-def home():
-    return render_template('login.html')
-    
 
-def token_required(f):
-    """a decorator to be used only after app.route which checks for token in header as AUthentication
-    """
-    @wraps(f)
-    def decorated(*args, **kwargs):
+def create_app():
+    app=Flask(__name__)
+    app.config['SECRET_KEY']='dasjhghjasbdas'
 
-        token = request.headers.get('Authorization')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
         
-        if not token:
-            token=request.args.get('token')
+        #initializing the db
+    db.init_app(app)
 
-        if not token:
-            return jsonify({'message': 'token is missing!'}), 403
-        try:
-            token = (token.split(" ")[-1])
-            jwt.decode(token, app.config['SECRET_KEY'],algorithms=["HS256"])
-        except:
-            return jsonify({'message': 'token is invalid!'}), 403
+    #importing and registering the blueprints
+    from views import views
 
-        return f(*args, **kwargs)
+    app.register_blueprint(views, url_prefix='/')
+
+    from models import User
+
+    with app.app_context():
+        db.create_all()
     
-    return decorated
-
-
-@app.route('/unprotected/')
-def unprotected():
-    return jsonify({'message':'Anyone can view this'})
-
-@app.route('/protected')
-@token_required
-def protected():
-    return jsonify({'message':'only people with valid tokens can view this'})
-
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    if request.form['username'] and request.form['password']=='123456':
-        token = jwt.encode({
-            'user':request.form['username'],
-            'exp': datetime.datetime.utcnow()+ datetime.timedelta(minutes=10)
-        },
-        app.config['SECRET_KEY'],algorithm="HS256")
-        return jsonify({'token':token})
-    
-    return make_response('Could not verify!', 401,{'WWW-Authenticate':'Basic realm:"Login required!"'})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    return app
