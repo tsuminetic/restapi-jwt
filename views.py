@@ -57,3 +57,7 @@ def login():
         return jsonify({'token':token})
     
     return make_response('Could not verify!', 401,{'WWW-Authenticate':'Basic realm:"Login required!"'})
+
+@views.route('/signup', methods=['POST','GET'])
+def signup():
+    return render_template('signup.html')
