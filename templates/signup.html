@@ -1,4 +1,10 @@
 {% extends "base.html" %}
 {% block body %}
-    signup page
+<form action="/signup" method="post">
+    <input type="username" name="username" placeholder="enter username"><br>
+    <input type="email" name="email" placeholder="enter email"><br>
+    <input type="password" name="password" placeholder="enter password"><br>
+    
+    <input type="submit" value="login">
+</form>
 {% endblock %}
