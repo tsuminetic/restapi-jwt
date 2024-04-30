@@ -1,11 +1,11 @@
 from flask import Blueprint, request, make_response, jsonify,render_template,redirect,url_for
 import jwt
 import datetime
-from models import User
+from models import User, Note
 from functools import wraps
-from flask_login import current_user
 from werkzeug.security import generate_password_hash,check_password_hash
 from app import db
+from sqlalchemy.orm import validates
 
 views=Blueprint('views', __name__)
 
@@ -41,7 +41,7 @@ def token_required(f):
         except:
             return jsonify({'message': 'token is invalid!'}), 403
 
-        return f(current_user, *args, **kwargs)
+        return f(current_user,token, *args, **kwargs)
     
     return decorated
 
@@ -52,8 +52,82 @@ def unprotected():
 
 @views.route('/protected')
 @token_required
-def protected(current_user):
-    return jsonify({'message':f'welcome, {current_user.username}'})
+def protected(current_user,token):
+    return jsonify({'message':f'welcome, {current_user.username}',
+                    'token':token
+                    })
+
+@views.route('/allnotes')
+@token_required
+def allnotes(current_user, token):
+    notes={
+        'message':f'welcome, {current_user.username}',
+        'notes':f'you have {len(current_user.notes)} note(s)',
+    }
+    for note in current_user.notes:
+        if note.completed:
+            x='✔'
+        else:
+            x='x'
+        notes[f'{note.id}-----{x}------{note.due_date}']=f'{note.data}'
+    return jsonify(notes)
+
+@views.route('/delnote/<int:note_id>', methods=['POST','GET'])
+@token_required
+def delnote(current_user, token, note_id):
+    note = Note.query.get(note_id)
+    if note:
+        if note.user_id==current_user.id:
+            db.session.delete(note)
+            db.session.commit()
+    return jsonify({
+        'message':'deleted!'
+    })
+
+@views.route('/notecompleted/<int:note_id>', methods=['POST','GET'])
+@token_required
+def notecompleted(current_user, token, note_id):
+    note = Note.query.get(note_id)
+    if note:
+        if note.user_id==current_user.id:
+            note.completed=True
+            db.session.commit()
+    return jsonify({
+        'message':f'note id no {note.id} marked as completed!'
+    })
+
+@views.route('/addnote', methods=['POST','GET'])
+@token_required
+def addnote(current_user, token):
+    if request.method=='POST':
+        note=request.form['note']
+        due_date_str = request.form.get('duedate')
+
+        if len(note) < 1:
+            return jsonify({
+                    'error':'bad request'
+                })
+        else:
+            try:
+                due_date = datetime.datetime.strptime(due_date_str, '%Y-%m-%d').date()
+                validate_due_date( None, due_date)
+            except ValueError as e:
+                return jsonify({
+                    'error':'bad request'
+                })
+            new_note = Note(data=note, due_date=due_date, user_id=current_user.id)
+            db.session.add(new_note)
+            db.session.commit()
+
+    return jsonify({
+            'message':'new note added! check /allnotes'
+        })
+
+@validates('due_date')
+def validate_due_date(key, due_date):
+    if due_date < datetime.datetime.now().date(): 
+        raise ValueError('Due date cannot be in the past.')
+    return due_date
 
 
 
@@ -92,7 +166,7 @@ def signup():
             return redirect(url_for('views.login'))
 
 
-    return render_template('signup.html')
+    return jsonify({'message':'doen signing up, go login'})
 
 
 def validatesignup(username, email, password):
