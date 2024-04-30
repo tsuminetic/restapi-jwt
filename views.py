@@ -61,14 +61,15 @@ def protected(current_user,token):
 @token_required
 def allnotes(current_user, token):
     notes={
-        'message':f'welcome, {current_user.username}',
-        'notes':f'you have {len(current_user.notes)} note(s)',
+        '-message':f'welcome, {current_user.username}',
+        '-notes':f'you have {len(current_user.notes)} note(s)',
+        '.-----------.':'.-----------.'
     }
     for note in current_user.notes:
         if note.completed:
-            x='✔'
+            x='👍'
         else:
-            x='x'
+            x='👎'
         notes[f'{note.id}-----{x}------{note.due_date}']=f'{note.data}'
     return jsonify(notes)
 
