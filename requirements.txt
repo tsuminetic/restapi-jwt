@@ -1,0 +1,77 @@
+Protection IV
+Unbreaking III
+Respiration III
+Aqua Affinity
+Mending
+thorns 3
+
+projectile Protection IV
+Unbreaking III
+Mending
+thorns 3
+
+Protection IV
+Unbreaking III
+Mending
+thorns 3 
+swift sneak 3
+
+Protection IV
+Unbreaking III
+Feather Falling IV
+Frost Walker
+Mending
+soul speed 3
+thorns 3
+
+sword
+Unbreaking III
+Mending 
+Sharpness V
+Sweeping Edge III
+Looting III 
+Fire Aspect II 
+Knockback II 
+
+axe
+Unbreaking III
+Mending 
+Efficiency V
+Sharpness V  
+Fortune III
+
+
+bow 
+Mending 
+Power V
+Unbreaking III
+Flame
+Punch 5
+
+
+pickaxe
+Unbreaking III
+Mending 
+Fortune III
+Efficiency V 
+
+shovel
+Unbreaking III
+Mending 
+Efficiency V
+Silk Touch 
+
+hoe
+Unbreaking III
+Mending 
+Efficiency V
+Fortune III 
+
+
+shield
+Unbreaking III 
+Mending 
+
+elytra
+Unbreaking III 
+Mending 

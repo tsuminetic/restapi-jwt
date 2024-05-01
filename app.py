@@ -1,30 +1,19 @@
-from flask import Flask, request, make_response, jsonify,render_template
-import jwt
-import datetime
-from functools import wraps
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-# jwt.decode(token, app.config['SECRET_KEY'],algorithms=["HS256"])
+from flask_restful import Api
 
 db = SQLAlchemy()
 
 
-def create_app():
-    app=Flask(__name__)
-    app.config['SECRET_KEY']='dasjhghjasbdas'
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-        
-        #initializing the db
-    db.init_app(app)
+app=Flask(__name__)
 
-    #importing and registering the blueprints
-    from views import views
+app.config['SECRET_KEY']='dasjhghjasbdas'
 
-    app.register_blueprint(views, url_prefix='/')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 
-    from models import User
+api = Api(app)
+db.init_app(app)
 
-    with app.app_context():
-        db.create_all()
-    
-    return app
+with app.app_context():
+    db.create_all()
