@@ -6,6 +6,7 @@ from functools import wraps
 from werkzeug.security import generate_password_hash,check_password_hash
 from app import db
 from sqlalchemy.orm import validates
+from flask_restful import Api, Resource, reqparse, abort, fields, marshal_with
 
 views=Blueprint('views', __name__)
 
@@ -57,25 +58,35 @@ def protected(current_user,token):
                     'token':token
                     })
 
-@views.route('/allnotes')
+
+
+@views.route('/notes')
 @token_required
 def allnotes(current_user, token):
+    data =[]
     notes={
         '-message':f'welcome, {current_user.username}',
         '-notes':f'you have {len(current_user.notes)} note(s)',
         '.-----------.':'.-----------.'
     }
     for note in current_user.notes:
-        if note.completed:
-            x='👍'
-        else:
-            x='👎'
-        notes[f'{note.id}-----{x}------{note.due_date}']=f'{note.data}'
-    return jsonify(notes)
+        data.append(dict(id=note.id, data=note.data, completed=note.completed))
+    return jsonify({"data":data,
+                    "metadata":{"total":len(current_user.notes)}
+                    })
 
-@views.route('/delnote/<int:note_id>', methods=['POST','GET'])
+@views.route('/notes/<int:note_id>')
 @token_required
-def delnote(current_user, token, note_id):
+def get_note(current_user, token, note_id):
+    note = Note.query.get(note_id)
+    if note:
+        return jsonify({
+            'data':dict(id=note.id, data=note.data, completed=note.completed)
+        })
+
+@views.route('/notes/<int:note_id>', methods=['DELETE'])
+@token_required
+def delete_note(current_user, token, note_id):
     note = Note.query.get(note_id)
     if note:
         if note.user_id==current_user.id:
@@ -85,19 +96,25 @@ def delnote(current_user, token, note_id):
         'message':'deleted!'
     })
 
-@views.route('/notecompleted/<int:note_id>', methods=['POST','GET'])
+
+
+@views.route('/notes/<int:note_id>', methods=['PUT'])
 @token_required
 def notecompleted(current_user, token, note_id):
     note = Note.query.get(note_id)
-    if note:
-        if note.user_id==current_user.id:
-            note.completed=True
-            db.session.commit()
+    if not note:
+        return jsonify({'error':'resource not found'})
+    # if note.completed:
+    #     return jsonify({'error':'already completed!'})
+    # if request.json['completed']:
+    note.completed=request.json['completed']
+    db.session.commit()
+    print(request.json['completed'])
     return jsonify({
-        'message':f'note id no {note.id} marked as completed!'
-    })
+            'data':dict(id=note.id, data=note.data, completed=note.completed)
+        })
 
-@views.route('/addnote', methods=['POST','GET'])
+@views.route('/notes', methods=['POST'])
 @token_required
 def addnote(current_user, token):
     if request.method=='POST':
@@ -106,7 +123,7 @@ def addnote(current_user, token):
 
         if len(note) < 1:
             return jsonify({
-                    'error':'bad request'
+                    'error':'bad request note empty'
                 })
         else:
             try:
@@ -114,7 +131,7 @@ def addnote(current_user, token):
                 validate_due_date( None, due_date)
             except ValueError as e:
                 return jsonify({
-                    'error':'bad request'
+                    'error':'bad request due date error'
                 })
             new_note = Note(data=note, due_date=due_date, user_id=current_user.id)
             db.session.add(new_note)
@@ -124,12 +141,12 @@ def addnote(current_user, token):
             'message':'new note added! check /allnotes'
         })
 
+
 @validates('due_date')
 def validate_due_date(key, due_date):
     if due_date < datetime.datetime.now().date(): 
         raise ValueError('Due date cannot be in the past.')
     return due_date
-
 
 
 @views.route('/login', methods=['POST','GET'])
