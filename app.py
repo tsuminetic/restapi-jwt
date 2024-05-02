@@ -15,5 +15,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 api = Api(app)
 db.init_app(app)
 
+from models.user import User
+from models.note import Note
+from models.list import List, Item
+
+
 with app.app_context():
     db.create_all()
