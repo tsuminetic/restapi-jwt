@@ -9,3 +9,4 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(150))
     username = db.Column(db.String(150))
     notes = db.relationship('Note')
+    lists = db.relationship('List')
