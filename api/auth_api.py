@@ -1,4 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify,render_template,redirect,url_for
+from flask import Blueprint, request, jsonify,redirect,url_for
 import jwt
 import datetime
 from models.user import User
@@ -40,11 +40,7 @@ def signup():
 
             db.session.add(new_user)
             db.session.commit()
-
-            return redirect(url_for('auth_api.login'))
-
-
-    return jsonify({'message':'doen signing up, go login'})
+    return jsonify({'message':'done signing up, go login'})
 
 
 def validatesignup(username, email, password):
