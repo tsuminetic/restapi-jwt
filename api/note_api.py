@@ -43,8 +43,6 @@ def delete_note(current_user, token, note_id):
         'message':'deleted!'
     })
 
-
-
 @api.route('/notes/<int:note_id>', methods=['PUT'])
 @auth.token_required
 def notecompleted(current_user, token, note_id):
